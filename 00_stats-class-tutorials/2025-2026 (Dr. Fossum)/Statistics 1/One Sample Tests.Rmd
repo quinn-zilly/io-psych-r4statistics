@@ -24,7 +24,7 @@ chisq.test(x = observed, p = expected_prop)
 
 Load the Old Faithful geyser eruption dataset
 ```{r}
-dat <- read.csv("OldFaithful.csv")
+dat <- read.csv("data/OldFaithful.csv")
 ```
 
 

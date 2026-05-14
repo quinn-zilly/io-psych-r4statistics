@@ -14,7 +14,7 @@ library(WebPower)
 
 Read in the data and name it as an object
 ```{r}
-#dat <- read.csv("ClassDataANOVA.csv")
+dat <- read.csv("data/ClassDataANOVA.csv")
 program = c(1,1,1,2,2,2,3,3,3)
 outcome = c(1,4,2,3,5,2,3,5,3)
 dat = data.frame(program, outcome)

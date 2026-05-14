@@ -16,7 +16,7 @@ library(lm.beta)
 
 Read in the data and name the object.
 ```{r}
-dat <- read.csv("../Data/SpeedDating.csv")
+dat <- read.csv("data/SpeedDating.csv")
 ```
 
 

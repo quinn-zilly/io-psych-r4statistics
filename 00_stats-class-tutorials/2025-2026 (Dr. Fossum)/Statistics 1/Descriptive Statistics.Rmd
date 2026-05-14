@@ -21,7 +21,7 @@ options(scipen = 999)
 Read in the data and name it as an object
 
 ```{r}
-dat <- read.csv("../Data/CleanCharacterDataStudy4a.csv")
+dat <- read.csv("data/CleanCharacterDataStudy4a.csv")
 ```
 
 

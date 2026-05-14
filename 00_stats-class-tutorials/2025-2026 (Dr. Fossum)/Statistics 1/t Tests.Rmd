@@ -13,7 +13,7 @@ library(psych)
 
 Data for paired samples test
 ```{r}
-dat <- read.csv("../Data/stroop.csv")
+dat <- read.csv("data/stroop.csv")
 ```
 
 Calculate the change score
