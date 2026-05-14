@@ -1,0 +1,119 @@
+---
+title: "Dissertation Analysis"
+author: "IO Psychology PhD Student"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Overview
+
+[Brief description of the study and research questions]
+
+---
+
+# 1. Setup & Package Loading
+
+```{r packages}
+# Core packages — add/remove as needed for your analysis
+library(tidyverse)    # Data manipulation and visualization
+library(psych)        # Psychometric analyses (EFA, reliability)
+library(lavaan)       # SEM and CFA
+library(lme4)         # Multilevel modeling
+library(car)          # Regression diagnostics
+library(effectsize)   # Effect size calculations
+library(apaTables)    # APA-formatted tables
+
+# Set seed for reproducibility
+set.seed(123)
+```
+
+---
+
+# 2. Data Import & Cleaning
+
+```{r data-import}
+# Load your data
+# df <- read.csv("data/your-data.csv")
+# df <- haven::read_sav("data/your-data.sav")  # For SPSS files
+
+# Preview
+# head(df)
+# str(df)
+# summary(df)
+```
+
+```{r data-cleaning}
+# Document your cleaning steps clearly so others can follow along
+
+# Example: Rename variables
+# df <- df %>%
+#   rename(
+#     age = Q1,
+#     gender = Q2
+#   )
+
+# Example: Recode reverse-scored items
+# df <- df %>%
+#   mutate(item3_r = 6 - item3)  # For a 1-5 scale
+```
+
+---
+
+# 3. Descriptive Statistics
+
+```{r descriptives}
+# Descriptive statistics for key variables
+# describe(df[, c("var1", "var2", "var3")])
+```
+
+---
+
+# 4. Reliability
+
+```{r reliability}
+# Cronbach's alpha for each scale
+# alpha(df[, c("item1", "item2", "item3")])
+```
+
+---
+
+# 5. Main Analysis
+
+[Replace this section header with your primary analysis type]
+
+```{r main-analysis}
+# Your primary analysis here
+```
+
+---
+
+# 6. Additional Analyses / Robustness Checks
+
+```{r robustness}
+# Secondary analyses, sensitivity checks, etc.
+```
+
+---
+
+# 7. Visualizations
+
+```{r plots}
+# Key figures
+```
+
+---
+
+# Session Info
+
+```{r session-info}
+sessionInfo()
+```
