@@ -1,6 +1,6 @@
 # IO Psychology PhD — R Statistics Knowledge Base
 
-> **A shared archive of R code, analysis files, and project templates for PhD students in the Industrial & Organizational Psychology program.**
+> **A shared archive of R code, analysis files, and project templates for graduate students in the Department of Industrial & Organizational Psychology at SPU.**
 
 ---
 
