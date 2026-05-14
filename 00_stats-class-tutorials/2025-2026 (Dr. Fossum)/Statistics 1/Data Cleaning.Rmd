@@ -1,0 +1,95 @@
+---
+title: "Week 2"
+author: "Quinn Zilly"
+date: "2025-10-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(comment = NA)
+options(scipen = 999)
+```
+
+Load Packages
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+Load Data
+```{r}
+df <- read.csv("data/CharacterDataStudy4a.csv")
+```
+
+```{r}
+str(df)
+```
+
+Keep participants who consented
+```{r}
+df <- df |>
+  filter(Consent==4)
+```
+
+Make age only numeric
+```{r}
+df$Age <- as.numeric(df$Age)
+```
+Keep participants 18 and older
+```{r}
+df <- df |>
+  filter(Age >= 18)
+```
+
+Rename Pnum
+```{r}
+df <- df |>
+  rename(participant_id = Pnum)
+```
+
+Gender Variables
+```{r}
+unique(df$Gender)
+```
+
+```{r}
+df <- df |>
+  mutate(Gender = case_when(
+    Gender == 6 ~ "F",
+    Gender == 8 ~ "M",
+    Gender == 7 ~ "Prefer Not To Say",
+    TRUE ~ Gender
+  ))
+```
+
+Demographic Percentages
+```{r}
+round(table(df$Gender)/nrow(df)*100, 2)
+```
+
+Score CCC student subscale
+```{r}
+CCC_Students_items <- df |>
+  select(num_range(
+    "CCC_students_", 1:4))
+
+df$CCC_Students <- rowMeans(CCC_Students_items, na.rm=T)
+```
+
+Score CCC Profs subscale
+```{r}
+CCC_Profs_items <- df |>
+  select(num_range(
+    "CCC_Profs_", 1:4))
+
+df$CCC_Profs <- rowMeans(CCC_Profs_items, na.rm=T)
+```
+
+Reverse code courses item 2
+```{r}
+df <- df |>
+  rename(CCC_Courses_2_nr = CCC_Courses_2)
+
+df$CCC_Courses_2 <- 6 - df$CCC_Courses_2_nr
+```
+

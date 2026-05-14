@@ -1,0 +1,111 @@
+---
+title: "Simple Linear Regression"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+Load Packages
+```{r}
+library(WebPower) #https://webpower.psychstat.org/wiki/
+library(psych)
+library(apaTables)
+library(tidyverse)
+library(lm.beta)
+```
+
+
+Read in the data and name the object.
+```{r}
+dat <- read.csv("../Data/SpeedDating.csv")
+```
+
+
+Research Question: does the intelligence rating predict the probability of wanting to see each other again?
+
+Recall the correlation between agediff and prob
+```{r}
+apa.cor.table(data.frame(dat$intel, dat$prob))
+```
+
+Let's make a scatterplot showing these two variables with a regression trend line displayed. Note which variable is on the x and y axis.
+
+https://r-graph-gallery.com
+
+```{r}
+ggplot(dat, aes(x=intel, y=prob, color=factor(gender))) + 
+    geom_point() +
+    labs(
+    x = "Intelligence",
+    y = "Probability of Another Date",
+    color = "Gender",
+    title = "Scatterplot"
+  ) + scale_color_manual(values = c("0" = "purple", "1" = "turquoise"))+
+  theme_minimal()
+```
+
+For a continuous scale color, try 
+
+scale_color_gradient(low = "blue", high = "red")
+
+
+## Simple Linear Regression
+
+```{r}
+model <- lm(prob ~ intel, data=dat)
+model
+```
+Can we get the standardized coefficients? This should look familiar from the correlation with simple linear regression.
+```{r}
+model %>% lm.beta()
+```
+
+That gave the coefficients. Now, we need to assess statistical significance. We also need to check the model and report model fit via the proportion of variance explained.
+```{r}
+model %>% summary()
+```
+
+Add a Confidence Interval
+```{r}
+confint(model, level = .90)
+confint(model, level = .95)
+```
+
+
+## APA style RESULTS write-up
+
+Simple linear regression analysis was conducted to evaluate the extent to which an intelligence rating in the context of speed dating could predict the intention to see the person again. Intelligence rating was found to be a statistically significant predictor of intention to see the person again, $b = 0.36$, $p < .001$, 95% CI = [0.33, 0.39]. That is, for two hypothetical participants who differ by one unit of intelligence, we expect the stress scores to differ by 0.36, with the intention to see the person again being higher for the participant with the higher intelligence score.
+
+Intelligence also explained a significant proportion of variance in intention to see the person again, $R^2 = .07$, $F(1, 7968) = 596.50$, $p < .001$, indicating that mindfulness explained approximately 19% of the variance in stress.
+
+
+## Power Analysis for Simple Linear Regression
+https://cran.r-project.org/web/packages/WebPower/WebPower.pdf
+
+Either n, f2, or power can be left out and that is what will be calculated.
+n = sample size
+p1 = predictors in full model
+p2 = predictors in the null model (defaults to 0)
+f2 = effect size
+alpha = .05
+power = power to detect an effect if an effect exists (typically .8)
+
+Calculate effect size in terms of f2 (Cohen, 1988)
+$$f^2=\frac{R^2}{1-R^2}$$
+```{r}
+R2 <-  0.06964
+f2 <- R2 / (1-R2)
+f2
+```
+
+Run the power analysis
+```{r}
+wp.regression(n = 100, p1 = 1, p2 = 0, f2 = 0.07485275, alpha = 0.05,
+power = NULL)
+```
+
+```{r}
+wp.regression(n = NULL, p1 = 1, p2 = 0, f2 = 0.07485275, alpha = 0.05,
+power = .8)
+```
+
+

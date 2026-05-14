@@ -1,0 +1,91 @@
+---
+title: "One Sample Tests In Class"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+Load Packages
+```{r}
+library(tidyverse)
+```
+
+Chi-square test for the Taco Bell sauce
+
+```{r}
+# Example observed frequencies
+observed <- c(8, 9, 7, 9)
+
+# Expected proportions (must sum to 1)
+expected_prop <- c(.25, .25, .25, .25)
+
+# Run one-sample chi-square test
+chisq.test(x = observed, p = expected_prop)
+```
+
+Load the Old Faithful geyser eruption dataset
+```{r}
+dat <- read.csv("OldFaithful.csv")
+```
+
+
+Look at the variables and choose what we want to test
+```{r}
+head(dat)
+```
+
+A tour company promises an eruption every hour. Is that true?
+
+Null hypothesis: the time between eruptions is 60 minutes
+Alternative hypothesis: the time between eruptions is NOT 60 minutes (two-tailed)
+
+```{r}
+mean(dat$waiting)
+```
+
+```{r}
+psych::describe(dat$waiting)
+```
+
+Don't forget to change the null hypothesis
+```{r}
+t.test(dat$waiting, mu=60)
+```
+Our results are statistically significant. This one-sample t test showed that the sample average wait time between eruptions of 70.89 minutes at Old Faithful differ significantly from the hypothesized population mean of 60 minutes, $t(271) = 13.22$, $p < .001$. 
+
+
+Try a one tailed test (greater, less, or two.sided by default). What changes? What stays the same?
+```{r}
+t.test(dat$waiting, mu=60, alternative = "less")
+```
+
+Visualize with a histogram
+```{r}
+ggplot(faithful, aes(x = waiting)) +
+  geom_histogram(bins = 20, fill = "skyblue", color = "black") +
+  geom_vline(xintercept = 60, linetype = "dashed") +
+  labs(title = "Old Faithful Time Between Eruptions",
+       x = "Wait Time (minutes)", y = "Count")
+```
+
+
+Now your turn with the GTAs or Dr. Fossum: do this same test for duration of the eruption.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

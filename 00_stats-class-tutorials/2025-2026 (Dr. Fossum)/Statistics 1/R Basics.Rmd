@@ -1,0 +1,46 @@
+---
+title: "R Basics"
+author: "Quinn Zilly"
+date: "2025-09-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Load Packages
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+
+This is a code chunk. Pressing ctrl + enter runs a chunk!
+```{r}
+2*4
+```
+
+
+Find the mean!
+```{r}
+mean(c(3,5))
+```
+
+
+Favorite colors
+```{r}
+fav_colors <- c("purple", "seagreen", "royalblue")
+fav_colors
+```
+
+
+```{r}
+dat <- read.csv("../Data/pixar.csv")
+```
+
+
+```{r}
+mean(dat$rotten_tomatoes, na.rm=T)
+```
+

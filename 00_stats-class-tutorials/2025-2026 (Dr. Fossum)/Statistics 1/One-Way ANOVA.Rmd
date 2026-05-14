@@ -1,0 +1,198 @@
+---
+title: "One-Way ANOVA In Class"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+Load Packages
+
+```{r, message=F}
+library(psych)
+library(tidyverse)
+library(WebPower)
+```
+
+Read in the data and name it as an object
+```{r}
+#dat <- read.csv("ClassDataANOVA.csv")
+program = c(1,1,1,2,2,2,3,3,3)
+outcome = c(1,4,2,3,5,2,3,5,3)
+dat = data.frame(program, outcome)
+```
+
+Research Question: Does program affect... ?
+
+Write out the hypotheses
+
+
+Make program a factor
+
+```{r}
+dat <- dat %>%
+    mutate(
+        program = case_when(
+        program == 1 ~ "CPY",
+        program == 2 ~ "IOP",
+        program == 3 ~ "RPS"),
+        program = as.factor(program),
+  )
+```
+
+
+Make graphs to explore the data
+
+```{r}
+ggplot(dat, aes(x=program, y=outcome)) + 
+    geom_boxplot(fill="slateblue", alpha=0.2) + 
+    xlab("Graduate Program")
+```
+
+Check the outcome variable for the normality assumption by group
+```{r }
+describeBy(outcome ~ program, data = dat)
+```
+Shapiro's test is used but typically with larger samples it's okay to violate normality.
+
+Levene's test evaluates the assumption of equal/similar variance of the DV at each level of the IV. We want non-significance (p > .05). If violated, we need to use an ANOVA test that is "robust to the violation of the homogeneity of variance" (e.g., Welch's one-way).
+
+
+```{r}
+car::leveneTest(outcome ~ program, data = dat)
+```
+
+
+```{r}
+omnibus <- aov(outcome ~ program, data = dat) 
+summary(omnibus)
+```
+
+BUT if Levene's IS significant (variances not equal), use Welch's F which is more robust to violating homogeneity of variance.
+```{r}
+oneway.test(outcome ~ program, data = dat)
+```
+
+
+Compute eta-squared effect size.
+```{r }
+2.889 / (2.889 + 12.000)
+```
+
+Follow-up to the significant omnibus F test
+
+If the p-value for the omnibus F is not significant, we stop there. But if it is sig, we follow up to see which groups specific groups actually differ. There are several ways to do this.
+
+OPTION 1: Post-hoc t-tests (pairwise comparisons)
+*Use for exploratory work when no firm hypotheses were articulated a priori.
+*They compare means of all pairs of groups
+*Less powerful than "planned comparisons" because more tests are required. 
+```{r }
+pairwise.t.test(dat$outcome, dat$program, p.adj = "none")
+```
+*Bonferroni procedure controls Type 1 error by dividing alpha (.05) by # of tests we do, creating a more conservative cutoff for significance. 
+But it's too conservative.
+
+```{r }
+pairwise.t.test(dat$outcome, dat$program, p.adj = "bonferroni")
+```
+
+*Holm's procedure is less conservative. You rank order p-values of tests and use a different significance cutoff for each one, getting less conservative each time (e.g., for 3 groups: .05/3, then .05/2, then .05/1). 
+
+```{r }
+pairwise.t.test(dat$outcome, dat$program, p.adj = "holm")
+```
+ 
+# OPTION 2: Planned contrasts (non-orthogonal)
+*More powerful. Theory-driven comparisons (when you have hypotheses).
+
+* There will always be k-1 contrasts (k = number of groups in IV). 
+*non-orthogonal contrasts compare overlapping pairs of groups (e.g., control vs. low; control vs. high)
+```{r }
+#summary.lm(omnibus)
+```
+
+
+#### OPTION 3: Planned contrasts (orthogonal)
+In *orthogonal* contrasts, if a group is singled out in one comparison it should be excluded from subsequent contrasts. The typical, orthogonal scenario with three ordered groups has only two contrasts:
+1. Control VS. condition1 and condition2
+2. condition1 versus condition2
+
+**Step 1: ** Specify our contrasts 
+*For ORTHOGONAL contrasts, we use non-overlapping comparisons.
+*k-1 contrasts (...so 2 tests for 3 IV groups here)
+*Once we 'single out' a condition for comparison, we can't use it again.
+In *contrast1* we compare LOW condition to the combined MED/HIGH conditions.
+In *contrast2* we discard LOW condition (already singled out) and compare MED and HIGH conditions.
+
+This is sensible because we could hypothesize that any degree of guilt could lead to more disclosure, so we first compare low to the mean of the other two groups. After that, we compare the med and high levels. 
+
+**Step 2:** Bind them together and check the output to ensure that we've mapped them correctly. 
+```{r}
+#Contrast1 compares LOW against the combined effects of MED and HIGH
+#contrast1 <- c(-2,1,1) #codes must sum to ZERO. 
+
+#Contrast2 excludes LOW; compares Med to High.
+#contrast2 <- c(0,-1,1) #zero makes it ignore the first group.
+
+
+#binding the contrasts together
+#contrasts(dat$seasons)<-cbind(contrast1, contrast2)
+#dat$seasons #shows the contrast info in the Condition variable
+```
+
+**Step 3:** Create a new ANOVA model
+```{r}
+#create a new object, the ANOVA looks the same, but it will now consider the contrasts
+#guiltPlanned <- aov(WC ~ guiltGroups, data = dat)
+#summary.lm(guiltPlanned) #gives contrasts (as a linear model like regression)
+```
+
+
+#### OPTION 4: Trend (polynomial) analysis
+Tests for a linear (.L) or curvilinear/quadratic (.Q) pattern in the data. Use if you have a theoretically defensible pattern you expect across increasing conditions (e.g., we might expect increasing DV for groups 1,2,3 here). Use polynomial contrast with 3 groups. Use contr.poly for cubic change (two changes in direction. Usually we interpret the most complex effect that is significant (i.e., quadratic over linear).
+
+```{r}
+#contrasts(dat$season)<-contr.poly(4)
+#trend<-aov(random ~ season, data = dat)
+#summary.lm(trend)
+```
+
+
+#### Which follow-up tests do we report?
+It depends! 
+*Post-hoc comparisons are simplest. If p values are small even after controlling for Type 1 error (e.g., Holm's), it's a good option.
+* If p-values hovering around 0.05, an orthogonal contrast will offer more power.
+*Polynomial is useful when their is theoretical reason for linear or quadratic relationship.  
+
+
+### What if we Violated the Homogeneity of Variance test and did Welch's F?
+You can run post hoc follow-up t-tests that do NOT assume equal variance.
+There are many (e.g., Games-Howell test).
+```{r}
+library(rstatix)
+games_howell_test(outcome ~ program, data = dat) 
+```
+
+
+
+
+
+## Power Analysis
+First convert eta squared effect size to Cohen's "little f squared":
+```{r}
+#f2=eta/1-eta
+```
+We simply plug this value into the "f =".
+```{r}
+wp.anova(k = 3, f = .4, alpha=.05, power = .8)
+#k = # of groups in IV
+#n = sample size
+#f = effect size, where f is small (.10), medium (.25), and large (.40)
+#sig.level = .05
+#power = .80
+```
+
+
+
+
+
+

@@ -1,0 +1,102 @@
+---
+title: "Descriptive Statistics In Class"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+Load Packages
+
+```{r}
+library(psych)
+library(stats)
+library(apaTables)
+library(tidyverse)
+```
+
+```{r}
+options(scipen = 999)
+```
+
+
+Read in the data and name it as an object
+
+```{r}
+dat <- read.csv("../Data/CleanCharacterDataStudy4a.csv")
+```
+
+
+
+## Central Tendency
+
+First visualize the data. Let's make a histogram of commute. ChatGPT can help figure out what each line does and I love editing code from the R Graphics Gallery: https://r-graph-gallery.com/
+
+```{r}
+ggplot(dat, aes(x = CCC_students)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "skyblue") +
+  theme_minimal() +
+  labs(
+    title = "Histogram of the CCC - Students Variable",
+    x = "Number of Students",
+    y = "Frequency"
+  )
+```
+
+
+Central Tendency
+
+```{r}
+mean(dat$CCC_students)
+```
+
+Median of commute time (especially if there are outliers)
+```{r}
+median(dat$CCC_students)
+```
+
+Mode needs a categorical variable, like Gender. Also, no actual function in base R.
+```{r}
+table(dat$Gender)
+```
+
+## Variability
+
+Variance
+```{r}
+var(dat$CCC_students)
+```
+
+Standard deviation, which is the square root of the variance.
+```{r}
+sd(dat$CCC_students)
+sqrt(var(dat$CCC_students))
+```
+
+Check for normality (skew and kurtosis)
+```{r}
+psych::describe(dat$CCC_students)
+```
+
+
+
+Correlations
+```{r}
+cor.test(dat$CCC_students, dat$CCC_profs)
+```
+
+Making correlation tables in APA format
+```{r}
+continuousVars <- data.frame(dat$CCC_students, dat$CCC_profs, dat$Age)
+apa.cor.table(continuousVars, filename = "cortable.doc")
+```
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,89 @@
+---
+title: "t Tests"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+Load packages and read in the data
+```{r, message = F}
+library(tidyverse)
+library(psych)
+```
+
+
+Data for paired samples test
+```{r}
+dat <- read.csv("../Data/stroop.csv")
+```
+
+Calculate the change score
+```{r}
+dat$change <- dat$incongruent - dat$congruent
+```
+
+Get descriptive statistics
+```{r}
+describe(dat$congruent)
+describe(dat$incongruent)
+describe(dat$change)
+```
+
+Assumptions of a t test
+
+Normality
+```{r}
+hist(dat$change)
+```
+
+Test the normality assumpution using the Shapiro Wilks test
+```{r}
+shapiro.test(dat$change)
+```
+
+
+Run a paired sample t test for the stroop data
+```{r}
+t.test(x = dat$incongruent, y = dat$congruent,
+       mu = 0, paired = TRUE, var.equal = FALSE)
+```
+Same as one sample test for the change variable (it's the same!)
+
+```{r}
+t.test(dat$change)
+```
+
+Independent Sample t Test
+
+Pretend we asked another question to separate students into two groups. This grouping variable is called GROUPS.
+
+Run this code but ignore it. It's just making up data to do this independent samples t test to make the grouping variable.
+```{r}
+dat$groups <- c(0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1)
+```
+
+Run an independent samples t test using code that follows the same pattern as simple linear regression in the lm() command.
+```{r}
+t.test(control ~ groups, data = dat)
+```
+
+Magic of regression: run this as a linear model and see what is the same
+
+-square the t statistic to get the F statistic
+ 
+-coefficient is just the mean difference
+
+-intercept is the mean of the reference group
+
+```{r}
+lm(control ~ groups, data = dat) %>% summary()
+```
+
+
+
+
+
+
+
+
+
+
