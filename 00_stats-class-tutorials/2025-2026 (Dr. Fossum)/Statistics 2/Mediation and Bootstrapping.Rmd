@@ -1,0 +1,123 @@
+---
+title: "7. Mediation and Bootstrapping"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+## Research Vignette
+In this class for the class examples, I will be using data collected through the Emerging Adulthood project. This is a multi-site research experiment, with longitudinal waves being collected every few years. This is 2nd wave.
+
+https://osf.io/te54b/
+
+For specifics on the variables, the surveys can be found on the OSF site, and a quick data dictionary is available on Canvas with most of the key variables defined.
+
+Today, I'm curious about the relationship between perceived social support from friends and stress, and if that relationship is mediated by a sense of belonging.
+
+Predictor: PSS_Friends
+Mediator: BelongingScale
+Outcome: Stress
+
+
+Some packages I frequently use:
+```{r}
+library(psych)
+library(apaTables)
+library(lavaan)
+library(tidyverse)
+library(pwr2ppl) #https://cran.r-project.org/web/packages/pwr2ppl/index.html
+```
+
+
+Read in the data and name the object.
+```{r}
+dat <- read.csv("EmergingAdulthoodData.csv")
+```
+
+
+## Mediation
+
+Mediation is used to describe how effects occur. The mediator variable is often the mechanism through which the predictor variable affects the outcome.
+
+```{r}
+model <- mediate(Stress ~ PSS_Friends + (BelongingScale), data = dat)
+model
+```
+
+## Bootstrapping
+Bootstrapping is a process of sampling with replacement. It relies on the assumption that the sample is representative of the population.
+
+https://www.r-bloggers.com/2022/12/how-to-perform-bootstrapping-in-r/ 
+
+```{r}
+animals <- c("cat", "dog", "koala", "hippo", "orca")
+animals
+sample(animals, length(animals), replace = TRUE)
+```
+
+## Use the lavaan package
+
+This is the most flexible and my recommended approach for simplicity but it requires model syntax to specify the paths correctly.
+
+```{r}
+model <- ' Stress ~ c*PSS_Friends
+             
+             BelongingScale ~ a*PSS_Friends
+             Stress ~ b*BelongingScale
+           
+           # indirect effect (a*b)
+             ab := a*b
+           
+           # total effect
+             total := c + (a*b)
+         '
+
+fit <- sem(model, se = "bootstrap", data = dat)
+summary(fit)
+```
+
+
+
+## Process Macro
+
+This is a flexible tool for mediation, moderation, and moderated mediation. It uses bootstrapping to calculate the indirect effect.
+
+```{r}
+# This can take a few minutes to run
+source('process.R')
+```
+```{r}
+process(data = dat, y = "Stress", x = "PSS_Friends", m = "BelongingScale", model = 4, boot = 5000, seed = 1234, progress=F)
+```
+
+
+## APA style RESULTS write-up
+
+We used a simple mediation analysis to examine the relationship between perceived social support from friends and stress through a sense of belonging. Perceived social support from friends was found to be a statistically significant predictor of belongingness, $a = 0.05$, $p < .001$, 95% CI [0.03, 0.07]. Additionally, belongingness was found to be a statistically significant predictor of stress, $b = 0.30$, $p < .001$, 95% CI [0.27, 0.33]. Analyzing the indirect effect using 5000 bootstrapped samples, perceived social support from friends had a positive effect on stress indirectly through a sense of belongingness (estimate: 0.02, 95% CI [0.01, 0.02]).
+
+
+## Power Analysis for Mediation
+https://cran.r-project.org/web/packages/pwr2ppl/index.html
+
+a1 path between predictor and first mediator 
+a2 path between predictor and second mediator 
+b1 Path between first mediator and dependent variable 
+b2 Path between second mediator and dependent variable 
+rm1m2 Correlation first mediator (m1) and second mediator (m2) 
+cprime Path between predictor and dependent variable 
+n Sample size 
+alpha Type I error (default is .05) 
+mvars Number of Mediators 
+rep number of repetitions (1000 is default)
+
+
+Run the power analysis
+```{r}
+medjs_paths(a1 = 0.0522, a2=NULL, b1 = 0.30, b2=NULL, rm1m2=NULL, n = 2850, cprime = -.12, alpha=0.05, mvars = 1, rep=1000)
+```
+
+
+### Note for HW
+
+The data is in an Excel file, on one of multiple sheets. Students will need to use the library(readxl) package and dat <- read_excel("mydata.xlsx", sheet = "Sheet1")
+
+

@@ -1,0 +1,87 @@
+---
+title: "5. Moderation (categorical)"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+## Research Vignette
+In this class for the class examples, I will be using data collected through the Emerging Adulthood project. This is a multi-site research experiment, with longitudinal waves being collected every few years. This is 2nd wave.
+
+https://osf.io/te54b/
+
+For specifics on the variables, the surveys can be found on the OSF site, and a quick data dictionary is available on Canvas with most of the key variables defined.
+
+
+
+Some packages I frequently use:
+```{r}
+library(psych)
+library(apaTables)
+library(tidyverse)
+library(lm.beta)
+library(pwr2ppl)
+library(interactions)
+```
+
+
+Read in the data and name the object.
+```{r}
+dat <- read.csv("EmergingAdulthoodData.csv")
+```
+
+
+## Moderation with a categorical moderator
+
+Does the relationship between mindfulness and stress depends on a person's parents' marital status? Parental marital status is categorical, with levels:
+1 = "married to each other"
+2 = "divorced from each other"
+3 = "never married but together"
+4 = "never married, not together"
+
+Predictor: Mindfulness
+Moderator: marriage5
+Outcome: Stress
+
+Make sure the categorical variable is recognized as a factor in R
+```{r}
+dat$marriage5 <- as.factor(dat$marriage5)
+```
+
+Rename the levels with more informative titles
+```{r}
+dat$marriage5 <- recode_factor(dat$marriage5,
+                                         "1" = "married",
+                                         "2" = "divorced",
+                                         "3" = "together",
+                                         "4" = "nottogether")
+```
+
+```{r}
+model <- lm(Stress ~ MindfulnessScale * marriage5, data=dat)
+model
+```
+
+Assess statistical significance and report model fit via the proportion of variance explained.
+
+```{r}
+model %>% summary()
+```
+
+Confidence Intervals
+```{r}
+model %>% confint()
+```
+
+## Plot the Interaction
+```{r}
+interact_plot(model, pred = "MindfulnessScale", modx = "marriage5", interval = TRUE)
+```
+
+
+## APA style RESULTS write-up
+
+Moderation analysis was conducted to evaluate the extent to which an emerging adult's parents' marital status moderates the relationship between mindfulness and stress. No statistically significant interactions were found, but the conditional effect of mindfulness on stress was found to be statistically significant, $b = -0.34$, $p < .001$, $95% CI [-0.37, -0.31]$, for the group with parents who were married. These predictors together explained a significant proportion of variance in stress scores, $R^2 = .19$, $F(7, 3095) = 106.20$, $p < .001$, indicating that the model where parental marital status moderates the relationship between mindfulness and stress explained approximately 19% of the variance in stress.
+
+
+
+

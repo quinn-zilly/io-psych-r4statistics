@@ -1,0 +1,155 @@
+---
+title: "Hierarchical Regression"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+## Research Vignette
+In this class for the class examples, I will be using data collected through the Emerging Adulthood project. This is a multi-site research experiment, with longitudinal waves being collected every few years. This is 2nd wave.
+
+https://osf.io/te54b/
+
+For specifics on the variables, the surveys can be found on the OSF site, and a quick data dictionary is available on Canvas with most of the key variables defined.
+
+Today, I'm curious again about our multiple regression looking at both mindfulness and perceived social support from friends predicting stress. Before running the model, we should make sure some assumptions of OLS regression are met.
+
+
+Load packages
+```{r, message=F}
+library(WebPower)
+library(psych)
+library(performance)
+library(apaTables)
+library(tidyverse)
+library(lm.beta)
+```
+
+Read in data
+```{r}
+dat <- read.csv("EmergingAdulthoodData.csv")
+```
+
+Research Question: What are the effects of mindfulness and perceived social support from friends on stress?
+
+# ASSUMPTIONS
+
+## Avoiding high Multicollinearity between predictors
+Review the correlation table to see if we need to worry about multicollinearity, where the predictor variables are highly correlated and neither will bring much unique information above and beyond the other in the model. Example: depression and anxiety
+
+```{r}
+subsetvars <- data.frame(dat$MindfulnessScale,
+                         dat$Stress,
+                         dat$PSS_Friends)
+apa.cor.table(subsetvars)
+```
+
+
+## Multiple Linear Regression
+To test the rest of the assumptions, we need residuals. Fit the model first to get those.
+
+```{r}
+model <- lm(Stress ~ MindfulnessScale + PSS_Friends, data=dat)
+model
+```
+
+## Check assumptions
+```{r}
+check_model(model)
+```
+
+
+
+## Nonlinear Trends (if linearity is violated)
+
+This isn't a great example, but there is a somewhat curvilinear relationship between perceived social support from friends and stress.
+```{r}
+ggplot(dat, aes(x = PSS_Friends, y = Stress)) +
+  geom_point()
+```
+
+
+```{r}
+quadratic_model <- lm(Stress ~ MindfulnessScale + PSS_Friends + I(PSS_Friends^2), data=dat)
+```
+
+The I() here in the formula notation is because the ^ symbol has a different meaning in the formula. We use I to isolate what is inside and make sure the interpretation is literally the square of that particular variable.
+
+```{r}
+quadratic_model %>% summary()
+```
+
+That's not a significant coefficient, so I wouldn't use the polynomial/quadratic model here for this relationship. If I had included age as a predictor in the model, which has more of a curvilinear relationship with stress, the quadratic term would be more appropriate.
+
+
+```{r}
+quadratic_model_age <- lm(Stress ~ MindfulnessScale + PSS_Friends + age + I(age^2), data=dat)
+quadratic_model_age %>% summary
+```
+
+
+
+
+# HIERARCHICAL MODELING
+
+Hierarchical modeling: Now, does the model fit improve by including both predictors, or were we better off with the simpler model where just mindfulness was used as a predictor? Do we explain significantly more variance in outcome variable with the additional predictor variable? 
+
+
+## Step 1: Fit the models
+In the hierarchical regression framework, we first begin by fitting all the nested models, subsequently removing predictor variables.
+
+```{r}
+model2 <- lm(Stress ~ MindfulnessScale + PSS_Friends, data=dat)
+model1 <- lm(Stress ~ MindfulnessScale, data=na.omit(dat[ , all.vars(formula(model2))]))  #it's important to use the same data for both models, or else it will return an error
+```
+
+Check to see a summary of each model, to get an idea of statistical significance on each predictor variable.
+```{r}
+model2 %>% summary()
+```
+
+```{r}
+model1 %>% summary()
+```
+
+## Compare models
+This is to test and see if the additional predictor offers a significant improvement in proportion of the outcome variable explained by the predictor(s) in the model.
+
+```{r}
+anova(model1, model2) 
+```
+
+Ever wonder why we used aov() in ANOVA class instead of anova()? This is why. This is what the anova() command can really do well.
+
+
+## APA style Results write-up
+
+Write the results for your selected model based on either simple or multiple regression, depending on how many variables were included, mentioning that hierarchical regression was performed to select the best model.
+
+
+
+## Bonus: Comparing even more models
+There is no limit to the number of models you compare, statistically, as long as you have good theoretical rationale for testing each set of variables in this way.
+
+Create a third possible model, now including Perceived Social Support from Family and from a Significant Other (Special) as a predictor variable.
+```{r}
+model3 <- lm(Stress ~ MindfulnessScale + PSS_Friends + PSS_Family + PSS_Special, data=dat)
+model3 %>% summary()
+```
+
+Even though we fit the nested models already, we still need to refit them using just the data used for this new model. This is because there might be some missing data on one of the newly included variables, so we need to remove those cases from our nested models.
+
+```{r}
+model2 <- lm(Stress ~ MindfulnessScale + PSS_Friends, data=na.omit(dat[ , all.vars(formula(model3))]))
+model1 <- lm(Stress ~ MindfulnessScale, data=na.omit(dat[ , all.vars(formula(model3))]))
+```
+
+
+Compare this model with an additional predictor to the two models compared above.
+```{r}
+anova(model1, model2, model3)
+```
+
+
+
+
+

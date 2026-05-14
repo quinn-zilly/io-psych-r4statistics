@@ -1,0 +1,104 @@
+---
+title: "6. Moderation (continuous)"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+## Research Vignette
+In this class for the class examples, I will be using data collected through the Emerging Adulthood project. This is a multi-site research experiment, with longitudinal waves being collected every few years. This is 2nd wave.
+
+https://osf.io/te54b/
+
+For specifics on the variables, the surveys can be found on the OSF site, and a quick data dictionary is available on Canvas with most of the key variables defined.
+
+Today, I'm curious about the relationship between mindfulness and stress. Additionally, I want to know that this relationship depends on a person's income. All the variables here are continuous.
+
+Predictor: Mindfulness
+Moderator: Income
+Outcome: Stress
+
+
+Some packages I frequently use:
+```{r}
+library(psych)
+library(apaTables)
+library(tidyverse)
+library(lm.beta)
+library(pwr2ppl)
+library(interactions)
+```
+
+
+Read in the data and name the object.
+```{r}
+dat <- read.csv("../Data/EmergingAdulthoodData.csv")
+```
+
+
+## Moderation with a continuous moderator
+
+Moderation is used when there is an interaction between predictor variables in the model. Statistically, nothing is included to differentiate which variable is the predictor and which is the moderator.
+
+```{r}
+model <- lm(Stress ~ MindfulnessScale * income, data=dat)
+model
+```
+
+Assess statistical significance and report model fit via the proportion of variance explained.
+
+```{r}
+model %>% summary()
+```
+
+Confidence Intervals
+```{r}
+model %>% confint()
+```
+
+## Plot the Interaction
+```{r}
+interact_plot(model, pred = "MindfulnessScale", modx = "income", interval = TRUE)
+```
+
+
+## APA style RESULTS write-up
+
+Moderation analysis was conducted to evaluate the extent to which income moderates the relationship between mindfulness and stress. There was a statistically significant interaction between mindfulness and income, $b = -0.02$, $p = .005$, $95% CI [-0.03, -0.01]$. The conditional effect of mindfulness on stress was found to be statistically significant as well, $b = -0.28$, $p < .001$, $95% CI [-0.33, -0.24]$, when income was at 0. However, the conditional effect of income on stress was not statistically significant, $b = -0.03$, $p = .10$, $95% CI [-0.01, 0.07]$, conditioned on mindfulness being 0. These predictors together explained a significant proportion of variance in stress scores, $R^2 = .20$, $F(3, 3078) = 252.90$, $p < .001$, indicating that the model where income moderates the relationship between mindfulness and stress explained approximately 20% of the variance in stress.
+
+
+## Power Analysis for Moderated Multiple Linear Regression
+https://cran.r-project.org/web/packages/pwr2ppl/index.html
+
+R2Mod = Full Model R2
+R2Ch = Change in R2 Added by Interaction
+mod_pred = Full Model Number of Predictors
+ch_pred = Change Model Number of Predictors
+nlow = starting sample size
+nhigh = ending sample size
+by = incremental increase in sample(e.g. nlow=10, nhigh=24, by=2, produces estimates of 10, 12, and 14... 24)
+alpha = Type I error (default is .05)
+
+
+Get R2 value for the model without the interaction
+```{r}
+no_int_model <- lm(Stress ~ MindfulnessScale + income, data=dat) 
+summary(no_int_model)$r.squared
+
+# remind ourselves of R^2 from our interaction model
+summary(model)$r.squared
+```
+Save the difference as an object
+```{r}
+changeR2 <- summary(model)$r.squared - summary(no_int_model)$r.squared
+```
+
+
+Run the power analysis
+```{r}
+regintR2(R2Mod=summary(model)$r.squared, R2Ch=changeR2, mod_pred=3, ch_pred=1, nlow=2000, nhigh=3000, by=100)
+```
+
+
+
+
+

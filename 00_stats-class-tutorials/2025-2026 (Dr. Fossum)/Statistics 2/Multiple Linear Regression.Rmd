@@ -1,0 +1,134 @@
+---
+title: "Multiple Linear Regression"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+## Research Vignette
+In this class for the class examples, I will be using data collected through the Emerging Adulthood project. This is a multi-site research experiment, with longitudinal waves being collected every few years. This is 2nd wave.
+
+https://osf.io/te54b/
+
+For specifics on the variables, the surveys can be found on the OSF site, and a quick data dictionary is available on Canvas with most of the key variables defined.
+
+Today, I'm curious about the relationship between mindfulness and stress. Additionally, I want to know that this pattern holds while controlling for  perceived social support from friends. All the variables here are continuous, so there are no grouping variables yet.
+
+Some packages I frequently use:
+```{r, message=F}
+library(WebPower)
+library(psych)
+library(apaTables)
+library(lm.beta)
+library(performance) #see is a dependent package, along with updated ggplot2
+library(tidyverse)
+```
+
+
+Read in the data and name the object.
+```{r}
+dat <- read.csv("../Data/EmergingAdulthoodData.csv")
+```
+
+
+It always helps to start with correlations between variables. This code makes a correlation table.
+```{r}
+subsetvars <- data.frame(dat$MindfulnessScale,
+                         dat$Stress,
+                         dat$PSS_Friends)
+apa.cor.table(subsetvars)
+```
+
+Let's make a scatterplot showing these two variables with a regression trend line displayed. Note which variable is on the x and y axis.
+```{r}
+ggplot(dat, aes(x = MindfulnessScale, y = Stress, color = PSS_Friends)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+```
+
+
+## Multiple Linear Regression
+Regression is another framework to think about relationships between variables, like ANOVA. Regression is even more flexible. We can't run a factorial ANOVA for this because the IV predictor variables are both continuous.
+
+```{r}
+model <- lm(Stress ~ MindfulnessScale + PSS_Friends, data=dat)
+model
+```
+
+Check assumptions
+
+```{r}
+check_model(model)
+```
+
+
+Calculate the standardized coefficients "by hand"
+$$\beta=b\big(\frac{SD_X}{SD_Y}\big)$$
+```{r}
+sd(dat$Stress, na.rm=T)
+sd(dat$MindfulnessScale, na.rm=T)
+sd(dat$PSS_Friends, na.rm=T)
+```
+
+Mindfulness
+```{r}
+ -0.3269*(0.8420061/0.6594298)
+```
+
+PSS_Friends
+```{r}
+ -0.0751*(1.301776/0.6594298)
+```
+
+
+Use code to check the standardized coefficients.
+```{r}
+model %>% lm.beta()
+```
+
+That gave the coefficients. Now, we need to assess statistical significance. We also need to check the model and report model fit via the proportion of variance explained.
+```{r}
+model %>% summary()
+```
+
+Add a Confidence Interval
+```{r}
+confint(model)
+```
+
+
+## APA style RESULTS write-up
+
+Multiple linear regression analysis was conducted to evaluate the extent to which mindfulness and perceived social support from friends could predict stress. Mindfulness was found to be a statistically significant predictor of stress, $b = -0.33$, $p < .001$, $95% CI [-0.35, -0.30]$, controlling for perceived social support from friends. That is, for two hypothetical participants who differ by one unit of mindfulness, we expect the stress scores to differ by 0.34, controlling for perceived social support from friends. Additionally, perceived social support from friends was found to be a statistically significant predictor of stress, $b = -0.08$, $p < .001$, $95% CI [-0.09, -0.06]$, controlling for mindfulness. That is, for two hypothetical participants who differ by one unit of perceived social support from friends, we expect the stress scores to differ by -0.08, controlling for mindfulness.
+
+These predictors together also explained a significant proportion of variance in stress scores, $R^2 = .21$, $F(2, 3114) = 413.80$, $p < .001$, indicating that mindfulness and perceived social support from friends explained approximately 21% of the variance in stress.
+
+
+## Power Analysis for Multiple Linear Regression
+https://cran.r-project.org/web/packages/WebPower/WebPower.pdf
+
+Either n, f2, or power can be left out and that is what will be calculated.
+n = sample size
+p1 = predictors in full model
+p2 = predictors in the null model (defaults to 0)
+f2 = effect size
+alpha = .05
+power = power to detect an effect if an effect exists (typically .8)
+
+Calculate effect size in terms of f2 (Cohen, 1988)
+$$f^2=\frac{R^2}{1-R^2}$$
+```{r}
+R2 <- .21
+f2 <- R2 / (1-R2)
+f2
+```
+
+Run the power analysis
+```{r}
+wp.regression(n = 20, p1 = 2, p2 = 0, f2 = f2, alpha = 0.05,
+power = NULL)
+```
+
+
+
+

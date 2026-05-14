@@ -1,0 +1,119 @@
+---
+title: "Categorical Predictors"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+## Research Vignette
+In this class for the class examples, I will be using data collected through the Emerging Adulthood project. This is a multi-site research experiment, with longitudinal waves being collected every few years. This is 2nd wave.
+
+https://osf.io/te54b/
+
+For specifics on the variables, the surveys can be found on the OSF site, and a quick data dictionary is available on Canvas with most of the key variables defined.
+
+Today, I'm curious about the relationship between education and stress. Education in this dataset was measured using a multiple choice item, and participants could select from the following five categories:
+1) not in college
+2) some college
+3) completed 2-year degree
+4) completed 4-year degree
+5) graduate school
+
+Some packages I frequently use:
+```{r, message=F}
+library(WebPower)
+library(psych)
+library(apaTables)
+library(tidyverse)
+library(lm.beta)
+```
+
+
+Read in the data and name the object.
+```{r}
+dat <- read.csv("EmergingAdulthoodData.csv")
+```
+
+What type of variable does R think EducationCoded is? We need it to be a factor.
+```{r}
+str(dat)
+dat$EducationCoded <- as.factor(dat$EducationCoded)
+```
+
+
+We can no longer look at correlations, since we are using a categorical variable. Instead, we can find the mean by group for some descriptive statistics.
+```{r}
+dat %>%
+  group_by(EducationCoded) %>%
+  summarise_at(vars(Stress), list(name = mean), na.rm=T) 
+                                    #na.rm=T for missing data
+```
+
+Plot the variables, using a new type of plot (boxplot or histogram) showing the outcome variable separated out by the categorical predictor variable groups.
+```{r}
+ggplot(dat, aes(x = EducationCoded, y = Stress, color = EducationCoded)) +
+  geom_boxplot() 
+```
+
+
+## Regression with a categorical predictor
+Regression is another framework to think about relationships between variables, like ANOVA. Regression is even more flexible. With one categorical predictor variable and a continuous outcome variable, the results and F statistics will be the same as a one-way ANOVA design.
+
+```{r}
+model <- lm(Stress ~ EducationCoded, data=dat)
+model
+```
+
+That gave the coefficients. Now, we need to assess statistical significance. We also need to check the model and report model fit via the proportion of variance explained.
+```{r}
+model %>% summary()
+```
+
+Compare the F statistic to a One-Way ANOVA
+```{r}
+aov(Stress ~ EducationCoded, data = dat) %>% summary()
+```
+These should be the same (F value, DF, and p-value).
+
+
+It's still possible to construct a Confidence Interval around the coefficients
+```{r}
+confint(model)
+```
+
+
+## APA style RESULTS write-up
+
+In a simple linear regression analysis, the impact of education level on stress was examined. The categories of the predictor variable were coded using indicator coding to facilitate regression analysis. The results indicated a statistically significant effect of education level on stress (F[4, 3096] = 5.54, p < .001). The predicted score for someone with some college is 0.18 units lower than for someone with no college (b = -0.18, p = .017). The predicted score for someone with a 2-year degree is 0.27 units lower than for someone with no college (b = -0.27, p = .002). The predicted score for someone with a 4-year degree is 0.31 units lower than for someone with no college (b = -0.31, p < .001). The predicted score for someone with graduate education is 0.31 units lower than for someone with no college (b = -0.31, p < .001). These findings suggest that education level significantly predicts variations in stress. The overall model accounted for 1% of the variance in the stress ($R^2 = .01$).
+
+
+## Using a different reference level
+Categorical variables that are not coded numerically in the data are assigned a reference level by choosing the first category alphabetically.
+
+Example: 
+```{r}
+dat$EducationCodedNames <- recode_factor(dat$EducationCoded,
+                                         "1" = "NoCollege",
+                                         "2" = "SomeCollege",
+                                         "3" = "TwoYearDegree",
+                                         "4" = "FourYearDegree",
+                                         "5" = "GraduateSchool")
+
+dat$EducationCodedNames %>% unique()
+```
+
+When we use this in our model from above, the reference level is NoCollege.
+```{r}
+lm(Stress ~ EducationCodedNames, data = dat)
+```
+
+But if I want to switch it, perhaps to make graduate school the reference level, we can change the reference level using the following code.
+
+```{r}
+dat <- within(dat, EducationCodedNames <- relevel(EducationCodedNames, ref = "GraduateSchool"))
+
+lm(Stress ~ EducationCodedNames, data = dat) #same as before, different output
+```
+
+
+
+
