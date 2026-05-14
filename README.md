@@ -16,10 +16,32 @@ If you want to **contribute** files (add your project after dissertation defense
 
 ---
 
+## 🖥️ Working Locally in RStudio
+
+If you download the repository and want to run `.Rmd` files on your own computer, follow these two steps to make sure file paths work correctly.
+
+**Step 1: Open the project file first.**
+The repo includes an `.Rproj` file in its root folder. Always open this file in RStudio before opening any `.Rmd` — double-click it in your file browser, or use File → Open Project in RStudio. This sets the working directory to the repo root automatically.
+
+**Step 2: Use `here()` for all file paths in your Rmd.**
+All `.Rmd` files in this repo use the [`here` package](https://here.r-lib.org/) to handle file paths. Instead of hardcoded paths like `"C:/Users/YourName/Downloads/data.csv"`, paths are written like:
+
+```r
+library(here)
+df <- read.csv(here("02_datasets", "your-data.csv"))
+```
+
+`here()` always builds paths relative to the repo root (where the `.Rproj` file lives), so the same code works on any computer regardless of where the repo is saved. If you open an `.Rmd` directly without opening the `.Rproj` first, `here()` may not anchor correctly and paths will break.
+
+> **In short:** `.Rproj` first, then open your `.Rmd`.
+
+---
+
 ## 📁 Repository Structure
 
 ```
 /
+├── knowledge-base.Rproj          # ← Open this first in RStudio
 ├── 00_stats-class-tutorials/     # Rmd files from first-year stats courses
 ├── 01_project-archive/           # Past student projects (anonymized)
 │   ├── template/                 # Blank project submission template
@@ -88,6 +110,8 @@ Shared datasets for practice or reuse across projects.
 **"I need a dataset to practice with"** → Check `02_datasets/`
 
 **"I want to see how to structure my analysis file"** → See `01_project-archive/template/`
+
+**"File paths in the Rmd aren't working"** → Make sure you opened `knowledge-base.Rproj` first, before the `.Rmd`
 
 ---
 
