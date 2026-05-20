@@ -41,7 +41,7 @@ df <- read.csv(here("02_datasets", "your-data.csv"))
 
 ```
 /
-├── knowledge-base.Rproj          # ← Open this first in RStudio
+├── io-psych-r4statistics.Rproj          # ← Open this first in RStudio
 ├── 00_stats-class-tutorials/     # Rmd files from first-year stats courses
 ├── 01_project-archive/           # Past student projects (anonymized)
 │   ├── template/                 # Blank project submission template
@@ -111,7 +111,7 @@ Shared datasets for practice or reuse across projects.
 
 **"I want to see how to structure my analysis file"** → See `01_project-archive/template/`
 
-**"File paths in the Rmd aren't working"** → Make sure you opened `knowledge-base.Rproj` first, before the `.Rmd`
+**"File paths in the Rmd aren't working"** → Make sure you opened `io-psych-r4statistics.Rproj` first, before the `.Rmd`
 
 ---
 
